@@ -1,0 +1,1154 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Secret Message</title>
+    <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/@emailjs/browser@3/dist/email.min.js"></script>
+    <script type="text/javascript">
+        document.addEventListener('DOMContentLoaded', function() {
+            if (typeof emailjs !== 'undefined') {
+                emailjs.init("h9UyQIdjWp9CxA-Ne");
+            } else {
+                console.error('EmailJS not loaded');
+            }
+        });
+    </script>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&family=JetBrains+Mono&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+        }
+
+        body {
+            min-height: 100vh;
+            background: #0f172a;
+            color: #e2e8f0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+            line-height: 1.6;
+            background-image: 
+                radial-gradient(circle at 15% 50%, rgba(59, 130, 246, 0.08) 0%, transparent 25%),
+                radial-gradient(circle at 85% 30%, rgba(99, 102, 241, 0.08) 0%, transparent 25%);
+        }
+
+        .container {
+            position: relative;
+            max-width: 600px;
+            width: 100%;
+            background: #1e293b;
+            border-radius: 24px;
+            padding: 40px 40px 100px 40px;
+            box-shadow: 0 4px 20px -2px rgba(0, 0, 0, 0.3);
+            opacity: 0;
+            transform: translateY(20px);
+            animation: fadeIn 0.8s ease forwards;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(12px);
+        }
+
+        h1 {
+            font-size: 32px;
+            font-weight: 700;
+            margin-bottom: 16px;
+            color: #f8fafc;
+            letter-spacing: -0.025em;
+            background: linear-gradient(to right, #60a5fa, #818cf8);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .intro {
+            font-size: 16px;
+            color: #94a3b8;
+            margin-bottom: 32px;
+        }
+
+        .progress-container {
+            width: 100%;
+            height: 6px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 100px;
+            margin-bottom: 32px;
+            overflow: hidden;
+        }
+
+        .progress-bar {
+            height: 100%;
+            background: linear-gradient(to right, #60a5fa, #818cf8);
+            width: 0;
+            transition: width 1s cubic-bezier(0.4, 0, 0.2, 1);
+            border-radius: 100px;
+            box-shadow: 0 0 10px rgba(96, 165, 250, 0.5);
+        }
+
+        .riddle {
+            margin: 32px 0 40px 0;
+            background: rgba(255, 255, 255, 0.03);
+            padding: 24px;
+            border-radius: 16px;
+            border: 1px solid rgba(255, 255, 255, 0.06);
+            transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .riddle p {
+            font-size: 18px;
+            margin-bottom: 20px;
+            color: #f1f5f9;
+            font-weight: 500;
+        }
+
+        input {
+            width: 100%;
+            padding: 16px 20px;
+            background: rgba(255, 255, 255, 0.05);
+            border: 2px solid rgba(255, 255, 255, 0.1);
+            border-radius: 12px;
+            font-size: 16px;
+            color: #f8fafc;
+            transition: all 0.2s ease;
+            margin-bottom: 12px;
+        }
+
+        input:focus {
+            outline: none;
+            border-color: #60a5fa;
+            background: rgba(255, 255, 255, 0.08);
+            box-shadow: 0 0 0 4px rgba(96, 165, 250, 0.1);
+        }
+
+        input::placeholder {
+            color: #64748b;
+        }
+
+        .hint {
+            color: #94a3b8;
+            font-size: 14px;
+            margin-bottom: 20px;
+            opacity: 0.8;
+        }
+
+        button {
+            width: 100%;
+            padding: 16px 24px;
+            background: linear-gradient(to right, #60a5fa, #818cf8);
+            color: white;
+            border: none;
+            border-radius: 12px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        button:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(96, 165, 250, 0.3);
+        }
+
+        button:active {
+            transform: translateY(0);
+        }
+
+        .feedback {
+            position: absolute;
+            bottom: 40px;
+            left: 40px;
+            right: 40px;
+            margin-top: 0;
+            padding: 16px;
+            border-radius: 12px;
+            font-size: 15px;
+            opacity: 0;
+            transform: translateY(10px);
+            transition: all 0.3s ease;
+            text-align: center;
+            font-weight: 500;
+            pointer-events: none;
+            z-index: 100;
+        }
+
+        .feedback.show {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        .feedback.success {
+            background: rgba(34, 197, 94, 0.1);
+            color: #4ade80;
+            border: 1px solid rgba(34, 197, 94, 0.2);
+        }
+
+        .feedback.error {
+            background: rgba(239, 68, 68, 0.1);
+            color: #f87171;
+            border: 1px solid rgba(239, 68, 68, 0.2);
+        }
+
+        .final-message {
+            display: none;
+            opacity: 0;
+            transform: translateY(30px) scale(0.95);
+            margin-top: 20px;
+            transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .final-message.show {
+            opacity: 1;
+            transform: translateY(0) scale(1);
+        }
+
+        .final-message p {
+            font-size: 18px;
+            line-height: 1.8;
+            color: #f1f5f9;
+            text-align: center;
+            font-weight: 500;
+            padding: 20px;
+            background: rgba(255, 255, 255, 0.03);
+            border-radius: 16px;
+            border: 1px solid rgba(255, 255, 255, 0.06);
+        }
+
+        .coordinates-section {
+            display: none;
+            opacity: 0;
+            transform: translateY(30px) scale(0.95);
+            transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+            margin-bottom: 40px;
+        }
+
+        .coordinates-section.show {
+            opacity: 1;
+            transform: translateY(0) scale(1);
+        }
+
+        .coordinates {
+            font-size: 24px;
+            color: #60a5fa;
+            margin: 25px 0;
+            text-align: center;
+            padding: 24px;
+            background: rgba(255, 255, 255, 0.03);
+            border-radius: 16px;
+            border: 1px solid rgba(255, 255, 255, 0.06);
+            font-family: 'JetBrains Mono', monospace;
+            letter-spacing: 0.5px;
+            text-shadow: 0 0 20px rgba(96, 165, 250, 0.3);
+        }
+
+        .divider {
+            height: 1px;
+            background: rgba(255, 255, 255, 0.06);
+            margin: 30px 0;
+        }
+
+        @keyframes fadeIn {
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes fadeScale {
+            from {
+                opacity: 0;
+                transform: scale(0.98);
+            }
+            to {
+                opacity: 1;
+                transform: scale(1);
+            }
+        }
+
+        @keyframes gradient {
+            0% {
+                background-position: 0% 50%;
+            }
+            50% {
+                background-position: 100% 50%;
+            }
+            100% {
+                background-position: 0% 50%;
+            }
+        }
+
+        @media (max-width: 640px) {
+            .container {
+                padding: 24px 24px 90px 24px;
+            }
+
+            h1 {
+                font-size: 28px;
+            }
+
+            .riddle p {
+                font-size: 16px;
+            }
+
+            input {
+                padding: 14px 18px;
+            }
+
+            button {
+                padding: 14px 20px;
+            }
+
+            .coordinates {
+                font-size: 20px;
+                padding: 20px;
+            }
+
+            .feedback {
+                bottom: 24px;
+                left: 24px;
+                right: 24px;
+            }
+        }
+
+        @media (max-width: 380px) {
+            .container {
+                padding: 20px 20px 80px 20px;
+            }
+
+            h1 {
+                font-size: 24px;
+            }
+
+            .feedback {
+                bottom: 20px;
+                left: 20px;
+                right: 20px;
+            }
+        }
+
+        .welcome-screen {
+            text-align: center;
+            animation: fadeIn 0.8s ease forwards;
+        }
+
+        .welcome-title {
+            font-size: 48px;
+            margin-bottom: 24px;
+            background: linear-gradient(to right, #60a5fa, #818cf8);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            opacity: 0;
+            transform: translateY(20px);
+            animation: slideUp 0.8s ease forwards;
+        }
+
+        .welcome-text {
+            color: #94a3b8;
+            font-size: 18px;
+            line-height: 1.8;
+            margin-bottom: 40px;
+            opacity: 0;
+            transform: translateY(20px);
+            animation: slideUp 0.8s ease forwards 0.2s;
+        }
+
+        .start-button {
+            display: inline-block;
+            padding: 16px 48px;
+            background: linear-gradient(to right, #60a5fa, #818cf8);
+            color: white;
+            border: none;
+            border-radius: 12px;
+            font-size: 18px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            opacity: 0;
+            transform: translateY(20px);
+            animation: slideUp 0.8s ease forwards 0.4s;
+        }
+
+        .start-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 20px rgba(96, 165, 250, 0.4);
+        }
+
+        .start-button:active {
+            transform: translateY(0);
+        }
+
+        .main-content {
+            display: none;
+            opacity: 0;
+            transform: translateY(40px);
+            transition: all 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .main-content.show {
+            display: block;
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        @keyframes slideUp {
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes fadeOut {
+            to {
+                opacity: 0;
+                transform: translateY(-20px);
+            }
+        }
+
+        .welcome-screen.fade-out {
+            animation: fadeOut 0.5s ease forwards;
+        }
+
+        .riddle.fade-out {
+            opacity: 0;
+            transform: translateY(-30px) scale(0.95);
+        }
+
+        .riddle.fade-in {
+            opacity: 0;
+            transform: translateY(30px) scale(0.95);
+            animation: fadeInUp 0.6s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+        }
+
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px) scale(0.95);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0) scale(1);
+            }
+        }
+
+        .progress-bar.updating {
+            animation: progressFlash 0.5s ease;
+        }
+
+        @keyframes progressFlash {
+            0%, 100% {
+                filter: brightness(1);
+            }
+            50% {
+                filter: brightness(1.3);
+            }
+        }
+
+        .riddle-text {
+            position: relative;
+            transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .riddle-text.fade-out {
+            opacity: 0;
+            transform: translateY(-20px);
+        }
+
+        .riddle-text.fade-in {
+            animation: textFadeIn 0.5s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+        }
+
+        @keyframes textFadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* Add styles for input animation */
+        .answer-container {
+            position: relative;
+            width: 100%;
+            margin-bottom: 12px;
+        }
+
+        .answer-container.fade-out input {
+            opacity: 0;
+            transform: translateY(-10px);
+        }
+
+        .answer-container.fade-in input {
+            animation: inputFadeIn 0.5s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+        }
+
+        @keyframes inputFadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* Add these new styles */
+        .reveal-coords-btn {
+            display: inline-block;
+            margin-top: 20px;
+            padding: 16px 32px;
+            background: rgba(96, 165, 250, 0.1);
+            color: #60a5fa;
+            border: 1px solid rgba(96, 165, 250, 0.2);
+            border-radius: 12px;
+            font-size: 16px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            opacity: 0;
+            transform: translateY(20px);
+        }
+
+        .reveal-coords-btn.show {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        .reveal-coords-btn:hover {
+            background: rgba(96, 165, 250, 0.2);
+            transform: translateY(-2px);
+        }
+
+        .reset-button {
+            margin-top: 20px;
+            padding: 12px 24px;
+            background: rgba(239, 68, 68, 0.1);
+            color: #ef4444;
+            border: 1px solid rgba(239, 68, 68, 0.2);
+            border-radius: 12px;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .reset-button:hover {
+            background: rgba(239, 68, 68, 0.2);
+            transform: translateY(-2px);
+        }
+
+        .reset-button:active {
+            transform: translateY(0);
+        }
+
+        .radio-option {
+            margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+            cursor: pointer;
+        }
+
+        .radio-option input[type="radio"] {
+            width: auto;
+            margin-right: 12px;
+            cursor: pointer;
+        }
+
+        .radio-option label {
+            color: #f1f5f9;
+            font-size: 16px;
+            cursor: pointer;
+        }
+
+        .radio-option:hover label {
+            color: #60a5fa;
+        }
+
+        .radio-option input[type="radio"]:checked + label {
+            color: #60a5fa;
+            font-weight: 500;
+        }
+
+        .answer-container button {
+            margin-top: 20px;
+            width: 100%;
+            padding: 16px 24px;
+            background: linear-gradient(to right, #60a5fa, #818cf8);
+            color: white;
+            border: none;
+            border-radius: 12px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .answer-container button:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(96, 165, 250, 0.3);
+        }
+
+        .answer-container button:active {
+            transform: translateY(0);
+        }
+
+        .options-container {
+            margin-bottom: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="welcome-screen" id="welcomeScreen">
+            <h1 class="welcome-title">Welcome to this Secret Message Challenge</h1>
+            <p class="welcome-text">
+                I guess you're here to find out what this is all about, and I don't think you expected something like this. But here you are reading this. 
+                So, if you think I forgot on something, you're wrong. I'm not that forgetful. At the end of this, you will get a secret message, that will maybe explain everything (or maybe absolute nothing). I advise you to complete this, because I will be waiting somewhere and I don't want to be there for nothing xd.
+            </p>
+            <button class="start-button" onclick="startChallenge()">Fuck it, let's start</button>
+        </div>
+
+        <div class="main-content" id="mainContent">
+            <h1>Secret Message</h1>
+            <p class="intro">Follow the path to discover something special...</p>
+            <div class="progress-container">
+                <div class="progress-bar" id="progressBar"></div>
+            </div>
+            <div class="riddle" id="riddle">
+                <p id="riddleText" class="riddle-text"></p>
+                <div class="answer-container" id="answerContainer">
+                    <input type="text" id="answer" placeholder="Type your answer..." autocomplete="off">
+                </div>
+                <small style="color: #bdc3c7; display: block; margin-bottom: 10px;">Note: Answers are case-sensitive and must be exact</small>
+            </div>
+            <div class="final-message" id="finalMessage"></div>
+            <div class="coordinates-section" id="coordinatesSection">
+                <div class="riddle">
+                    <p id="coordRiddleText" class="riddle-text"></p>
+                    <div class="answer-container" id="coordAnswerContainer">
+                        <input type="text" id="coordAnswer" placeholder="Type your answer..." autocomplete="off">
+                    </div>
+                    <small style="color: #bdc3c7; display: block; margin-bottom: 10px;">Note: Answers are case-sensitive and must be exact</small>
+                    <button onclick="checkCoordinates()">Get Coordinates</button>
+                </div>
+            </div>
+        </div>
+        
+        <div class="feedback" id="feedback"></div>
+    </div>
+
+    <script>
+        const riddles = [
+            {
+                question: "Who will be driving for Williams Racing F1 in 2025? (Driver 1, Driver 2 - alphabetically)",
+                answer: "Alex Albon, Carlos Sainz"
+            },
+            {
+                question: "For how many seasons will Lando Norris be driving for McLaren F1 in 2025? ",
+                answer: "7"
+            },
+            {
+                question: "Who will be the 11th team to join the F1 grid in 2026? (One word answer - Car manufacturer)",
+                answer: "Cadillac"
+            },
+            {
+                question: "Who is the reserve driver for Mercedes AMG Petronas F1 Team in 2025? (Driver)",
+                answer: "Valtteri Bottas"
+            },
+            {
+                question: "Who is the youngest driver in F1 history? (Driver)",
+                answer: "Max Verstappen"
+            },
+            {
+                question: "What does blue flag mean in F1?",
+                options: ["It informs a driver that they must change their racing line to defend against an approaching competitor.", "It acts as a warning that a much faster car is approaching from behind, often due to being lapped.", "It signals to the driver that DRS is temporarily disabled in their current sector. "],
+                answer: "It acts as a warning that a much faster car is approaching from behind, often due to being lapped."
+            }
+        ];
+
+        const coordRiddle = {
+            question: "Who said this phrase and in what year? - The engine feels good, much slower than before. Amazing (Driver, Year)",
+            answer: "Fernando Alonso, 2017"
+        };
+
+        let currentRiddle = 0;
+        const finalClue = "Meet me on the island's edge, where flowing waters mirror the stars and city lights paint the sky. A moment awaits that could change this story forever. Time: 8:00 PM";
+        const coordinates = "49.3064416° N, 14.1443359° E"; // Replace with your coordinates
+
+        // Add these constants at the top with other constants
+        const STORAGE_KEY = 'riddleProgress';
+        const COORDINATES_SOLVED_KEY = 'coordinatesSolved';
+
+        async function sendEmail(stage) {
+            const templateParams = {
+                to_email: 'davebrich07@gmail.com',
+                from_name: 'Riddle Challenge',
+                stage: stage,
+                message: `Stage ${stage} of the riddle challenge has been completed!`,
+                subject: `Riddle Challenge - Stage ${stage} Completed`,
+                reply_to: 'noreply@riddlechallenge.com'
+            };
+
+            try {
+                const response = await emailjs.send(
+                    'service_vw8ypw3',
+                    'template_4igvii7',
+                    templateParams
+                );
+                console.log('Email sent successfully:', response);
+                console.log(`Stage ${stage} completion email sent`);
+            } catch (error) {
+                console.error('Failed to send email:', error);
+                console.error('Error details:', error.text);
+            }
+        }
+
+        function updateProgress() {
+            const progress = ((currentRiddle + 1) / riddles.length) * 100;
+            document.getElementById('progressBar').style.width = `${progress}%`;
+        }
+
+        function showFinalMessage() {
+            const riddleElement = document.getElementById('riddle');
+            const finalMessage = document.getElementById('finalMessage');
+            
+            // Clear any existing content and make sure display is none initially
+            finalMessage.innerHTML = '';
+            finalMessage.style.display = 'none';
+            finalMessage.classList.remove('show');
+            
+            // Fade out the riddle
+            riddleElement.classList.add('fade-out');
+            
+            setTimeout(() => {
+                // Hide riddle and show final message
+                riddleElement.style.display = 'none';
+                finalMessage.style.display = 'block';
+                
+                // Force reflow
+                void finalMessage.offsetHeight;
+                
+                // Add the message content with reset button
+                finalMessage.innerHTML = `
+                    <p>${finalClue}</p>
+                    <button class="reset-button" onclick="resetProgress()">Start Over</button>
+                `;
+                
+                // Show the message with animation
+                finalMessage.classList.add('show');
+                
+                // Update progress bar
+                const progressBar = document.getElementById('progressBar');
+                progressBar.style.width = '100%';
+                progressBar.classList.add('updating');
+                
+                // Only send email if this is from solving the last riddle
+                if (currentRiddle === riddles.length) {
+                    sendEmail('Secret Message Revealed');
+                }
+                
+                // Only add reveal coordinates button if not already shown coordinates
+                if (!localStorage.getItem(COORDINATES_SOLVED_KEY)) {
+                    // Add the reveal coordinates button after a delay
+                    setTimeout(() => {
+                        if (!document.getElementById('revealCoordsBtn')) {  // Check if button doesn't exist
+                            const revealBtn = document.createElement('button');
+                            revealBtn.className = 'reveal-coords-btn';
+                            revealBtn.id = 'revealCoordsBtn';
+                            revealBtn.onclick = showCoordinatesSection;
+                            revealBtn.textContent = "Don't know where that is? Click here to play more and reveal coordinates";
+                            
+                            finalMessage.appendChild(revealBtn);
+                            
+                            // Animate button
+                            setTimeout(() => {
+                                revealBtn.classList.add('show');
+                            }, 100);
+                        }
+                    }, 2000);
+                }
+            }, 500);
+        }
+
+        function showCoordinatesSection() {
+            const finalMessage = document.getElementById('finalMessage');
+            const coordSection = document.getElementById('coordinatesSection');
+            
+            // Reset coordinate section
+            coordSection.classList.remove('show');
+            coordSection.style.display = 'none';
+            
+            // Fade out final message
+            finalMessage.classList.remove('show');
+            
+            setTimeout(() => {
+                finalMessage.style.display = 'none';
+                coordSection.style.display = 'block';
+                
+                // Set the riddle question
+                document.getElementById('coordRiddleText').textContent = coordRiddle.question;
+                
+                // Clear any previous input
+                document.getElementById('coordAnswer').value = '';
+                
+                // Force reflow
+                void coordSection.offsetHeight;
+                
+                // Show coordinates section
+                coordSection.classList.add('show');
+            }, 500);
+        }
+
+        function updateRiddle() {
+            const riddleText = document.getElementById('riddleText');
+            const answerContainer = document.getElementById('answerContainer');
+            
+            if (!riddleText || !answerContainer) {
+                console.error('Required elements not found');
+                return;
+            }
+            
+            if (currentRiddle < riddles.length) {
+                const currentQuestion = riddles[currentRiddle];
+                
+                riddleText.textContent = currentQuestion.question;
+                
+                // Check if this riddle has options (multiple choice)
+                if (currentQuestion.options) {
+                    // Replace input with radio buttons and include the continue button
+                    answerContainer.innerHTML = `
+                        <div class="options-container">
+                            ${currentQuestion.options.map((option, index) => `
+                                <div class="radio-option">
+                                    <input type="radio" id="option${index}" name="answer" value="${option}">
+                                    <label for="option${index}">${option}</label>
+                                </div>
+                            `).join('')}
+                        </div>
+                        <button onclick="checkAnswer()">Continue</button>
+                    `;
+                } else {
+                    // Regular text input for non-multiple choice questions
+                    answerContainer.innerHTML = `
+                        <input type="text" id="answer" placeholder="Type your answer..." autocomplete="off">
+                        <button onclick="checkAnswer()">Continue</button>
+                    `;
+                }
+            } else {
+                showFinalMessage();
+            }
+        }
+
+        function showFeedback(message, isSuccess) {
+            const feedback = document.getElementById('feedback');
+            const riddleElement = document.getElementById('riddle');
+            const riddleText = document.getElementById('riddleText');
+            const answerContainer = document.getElementById('answerContainer');
+            
+            feedback.textContent = isSuccess ? 'Great!' : 'Not quite right. Try again.';
+            feedback.className = 'feedback ' + (isSuccess ? 'success' : 'error') + ' show';
+            
+            if (isSuccess) {
+                // First fade out everything
+                riddleElement.classList.add('fade-out');
+                riddleText.classList.add('fade-out');
+                answerContainer.classList.add('fade-out');
+                
+                setTimeout(() => {
+                    feedback.className = 'feedback';
+                    currentRiddle++;
+                    
+                    setTimeout(() => {
+                        if (currentRiddle < riddles.length) {
+                            // Remove fade-out classes
+                            riddleText.classList.remove('fade-out');
+                            answerContainer.classList.remove('fade-out');
+                            riddleElement.classList.remove('fade-out');
+                            
+                            // Force reflow
+                            void riddleElement.offsetWidth;
+                            
+                            // Use updateRiddle instead of directly setting text
+                            updateRiddle();
+                            
+                            // Add fade-in classes
+                            riddleText.classList.add('fade-in');
+                            answerContainer.classList.add('fade-in');
+                            riddleElement.classList.add('fade-in');
+                            
+                            // Update progress
+                            const progressBar = document.getElementById('progressBar');
+                            progressBar.classList.add('updating');
+                            updateProgress();
+                            
+                            // Clean up animations
+                            setTimeout(() => {
+                                riddleElement.classList.remove('fade-in');
+                                riddleText.classList.remove('fade-in');
+                                answerContainer.classList.remove('fade-in');
+                                progressBar.classList.remove('updating');
+                            }, 600);
+                        } else {
+                            showFinalMessage();
+                        }
+                    }, 300);
+                }, 1500);
+            } else {
+                setTimeout(() => {
+                    feedback.className = 'feedback';
+                }, 700);
+            }
+        }
+
+        function checkAnswer() {
+            let answer;
+            const currentQuestion = riddles[currentRiddle];
+            
+            if (currentQuestion.options) {
+                // Get selected radio button value
+                const selectedOption = document.querySelector('input[name="answer"]:checked');
+                if (!selectedOption) {
+                    showFeedback('Please select an answer.', false);
+                    return;
+                }
+                answer = selectedOption.value;
+                
+                // For multiple choice, we need an exact match
+                if (answer === currentQuestion.answer) {
+                    showFeedback('Correct! Moving forward...', true);
+                    saveProgress();
+                } else {
+                    showFeedback('Not quite right. Try again.', false);
+                }
+            } else {
+                // For text input questions
+                answer = document.getElementById('answer').value.trim();
+                if (answer === currentQuestion.answer) {
+                    showFeedback('Correct! Moving forward...', true);
+                    saveProgress();
+                } else {
+                    showFeedback('Not quite right. Try again.', false);
+                }
+            }
+        }
+
+        function checkCoordinates() {
+            const answer = document.getElementById('coordAnswer').value.trim();
+            if (answer === coordRiddle.answer) {
+                const coordSection = document.getElementById('coordinatesSection');
+                const finalMessage = document.getElementById('finalMessage');
+                
+                coordSection.classList.remove('show');
+                
+                setTimeout(() => {
+                    coordSection.style.display = 'none';
+                    finalMessage.style.display = 'block';
+                    finalMessage.innerHTML = `
+                        <p>${finalClue}</p>
+                        <div class="coordinates">49.3064416° N, 14.1443359° E</div>
+                        <button class="reset-button" onclick="resetProgress()">Start Over</button>
+                    `;
+                    
+                    void finalMessage.offsetHeight;
+                    finalMessage.classList.add('show');
+                    sendEmail('Coordinates Revealed');
+                    saveCoordinatesSolved();
+                }, 500);
+            } else {
+                showFeedback('Not quite right. Try again.', false);
+            }
+        }
+
+        function setupEventListeners() {
+            // Remove existing listener if any
+            document.removeEventListener('keypress', handleKeyPress);
+            // Add new listener
+            document.addEventListener('keypress', handleKeyPress);
+        }
+
+        function handleKeyPress(e) {
+            if (e.key === 'Enter') {
+                if (document.getElementById('coordAnswer') && document.getElementById('coordAnswer') === document.activeElement) {
+                    checkCoordinates();
+                    return;
+                }
+                
+                const currentQuestion = riddles[currentRiddle];
+                if (currentQuestion.options) {
+                    const selectedOption = document.querySelector('input[name="answer"]:checked');
+                    if (selectedOption) {
+                        checkAnswer();
+                    }
+                } else {
+                    const answerInput = document.getElementById('answer');
+                    if (answerInput && answerInput === document.activeElement) {
+                        checkAnswer();
+                    }
+                }
+            }
+        }
+
+        function resetProgress() {
+            // Clear local storage
+            localStorage.removeItem(STORAGE_KEY);
+            localStorage.removeItem(COORDINATES_SOLVED_KEY);
+            
+            // Reset current riddle
+            currentRiddle = 0;
+            
+            // Reset UI
+            const welcomeScreen = document.getElementById('welcomeScreen');
+            const mainContent = document.getElementById('mainContent');
+            const finalMessage = document.getElementById('finalMessage');
+            const coordSection = document.getElementById('coordinatesSection');
+            const riddle = document.getElementById('riddle');
+            
+            // Reset displays
+            welcomeScreen.style.display = 'block';
+            welcomeScreen.classList.remove('fade-out');
+            mainContent.style.display = 'none';
+            mainContent.classList.remove('show');
+            finalMessage.style.display = 'none';
+            finalMessage.classList.remove('show');
+            coordSection.style.display = 'none';
+            coordSection.classList.remove('show');
+            riddle.style.display = 'block';
+            
+            // Reset progress bar
+            document.getElementById('progressBar').style.width = '0%';
+            
+            // Clear inputs
+            if (document.getElementById('answer')) {
+                document.getElementById('answer').value = '';
+            }
+            if (document.getElementById('coordAnswer')) {
+                document.getElementById('coordAnswer').value = '';
+            }
+            
+            // Update first riddle using updateRiddle instead of direct text setting
+            updateRiddle();
+        }
+
+        function startChallenge() {
+            const welcomeScreen = document.getElementById('welcomeScreen');
+            const mainContent = document.getElementById('mainContent');
+            
+            welcomeScreen.classList.add('fade-out');
+            
+            setTimeout(() => {
+                welcomeScreen.style.display = 'none';
+                mainContent.style.display = 'block';
+                mainContent.offsetHeight;
+                mainContent.classList.add('show');
+                
+                const riddleElement = document.getElementById('riddle');
+                riddleElement.classList.add('fade-in');
+                
+                // Use updateRiddle instead of directly setting the text
+                updateRiddle();
+                updateProgress();
+            }, 500);
+        }
+
+        // Add this function to save progress
+        function saveProgress() {
+            const progress = {
+                currentRiddle: currentRiddle,
+                coordinatesSolved: false,
+                finalMessageShown: currentRiddle >= riddles.length
+            };
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(progress));
+        }
+
+        // Add this function to save coordinates solved state
+        function saveCoordinatesSolved() {
+            localStorage.setItem(COORDINATES_SOLVED_KEY, 'true');
+        }
+
+        // Add this function to load saved progress
+        function loadProgress() {
+            const savedProgress = localStorage.getItem(STORAGE_KEY);
+            const coordsSolved = localStorage.getItem(COORDINATES_SOLVED_KEY);
+            
+            if (coordsSolved === 'true') {
+                // If coordinates were solved, show them immediately
+                document.getElementById('welcomeScreen').style.display = 'none';
+                document.getElementById('mainContent').style.display = 'block';
+                document.getElementById('mainContent').classList.add('show');
+                document.getElementById('riddle').style.display = 'none';
+                document.getElementById('coordinatesSection').style.display = 'none';
+                showFinalCoordinates();
+                return; // Exit early
+            }
+            
+            if (savedProgress) {
+                const progress = JSON.parse(savedProgress);
+                currentRiddle = progress.currentRiddle;
+                
+                // If final message was shown or all riddles completed
+                if (progress.finalMessageShown || currentRiddle >= riddles.length) {
+                    document.getElementById('welcomeScreen').style.display = 'none';
+                    document.getElementById('mainContent').style.display = 'block';
+                    document.getElementById('mainContent').classList.add('show');
+                    document.getElementById('riddle').style.display = 'none';
+                    showFinalMessage();
+                    return; // Exit early
+                }
+                
+                // If there are still riddles to solve
+                if (currentRiddle < riddles.length) {
+                    document.getElementById('welcomeScreen').style.display = 'none';
+                    document.getElementById('mainContent').style.display = 'block';
+                    document.getElementById('mainContent').classList.add('show');
+                    
+                    // Use updateRiddle to properly set up the current riddle
+                    updateRiddle();
+                    updateProgress();
+                }
+            }
+        }
+
+        // Add this function to show final coordinates directly
+        function showFinalCoordinates() {
+            const coordSection = document.getElementById('coordinatesSection');
+            const finalMessage = document.getElementById('finalMessage');
+            const riddle = document.getElementById('riddle');
+            
+            // Hide all other sections
+            coordSection.style.display = 'none';
+            riddle.style.display = 'none';  // Hide the riddle/answer section
+            
+            // Show final message with coordinates
+            finalMessage.style.display = 'block';
+            finalMessage.innerHTML = `
+                <p>${finalClue}</p>
+                <div class="coordinates">49.3064416° N, 14.1443359° E</div>
+                <button class="reset-button" onclick="resetProgress()">Start Over</button>
+            `;
+            finalMessage.classList.add('show');
+        }
+
+        // Modify the DOMContentLoaded event listener
+        document.addEventListener('DOMContentLoaded', function() {
+            if (typeof emailjs !== 'undefined') {
+                emailjs.init("h9UyQIdjWp9CxA-Ne");
+            } else {
+                console.error('EmailJS not loaded');
+            }
+            loadProgress();
+            setupEventListeners();
+            if (!localStorage.getItem(STORAGE_KEY) && !localStorage.getItem(COORDINATES_SOLVED_KEY)) {
+                updateRiddle();
+            }
+        });
+    </script>
+</body>
+</html>
