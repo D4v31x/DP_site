@@ -611,7 +611,7 @@
             <h1 class="welcome-title">Welcome to this Secret Message Challenge</h1>
             <p class="welcome-text">
                 I guess you're here to find out what this is all about, and I don't think you expected something like this. But here you are reading this. 
-                So, if you think I forgot on something, you're wrong. I'm not that forgetful. At the end of this, you will get a secret message, that will maybe explain everything (or maybe absolute nothing). I advise you to complete this, because I will be waiting somewhere and I don't want to be there for nothing xd.
+                So, first of all, if you think I forgot on something, you're wrong. I'm not that forgetful. At the end of this, you will get a secret message, that will maybe explain everything (or maybe absolute nothing). I advise you to complete this, because I will be waiting somewhere and I don't want to be there waiting for nothing xd.
             </p>
             <button class="start-button" onclick="startChallenge()">Fuck it, let's start</button>
         </div>
@@ -635,9 +635,9 @@
                     <p id="coordRiddleText" class="riddle-text"></p>
                     <div class="answer-container" id="coordAnswerContainer">
                         <input type="text" id="coordAnswer" placeholder="Type your answer..." autocomplete="off">
+                        <button onclick="checkCoordinates()">Submit</button>
                     </div>
                     <small style="color: #bdc3c7; display: block; margin-bottom: 10px;">Note: Answers are case-sensitive and must be exact</small>
-                    <button onclick="checkCoordinates()">Get Coordinates</button>
                 </div>
             </div>
         </div>
@@ -674,17 +674,35 @@
             }
         ];
 
-        const coordRiddle = {
-            question: "Who said this phrase and in what year? - The engine feels good, much slower than before. Amazing (Driver, Year)",
-            answer: "Fernando Alonso, 2017"
-        };
+        const coordRiddles = [
+            {
+                question: "Who said this phrase and in what year? - The engine feels good, much slower than before. Amazing (Driver, Year)",
+                answer: "Fernando Alonso, 2017"
+            },
+            {
+                question: "Which driver achieved their first F1 victory at the 2024 Hungarian Grand Prix? (Driver)",
+                answer: "Oscar Piastri"
+            },
+            {
+                question: "What is the main function of the DRS (Drag Reduction System) in Formula 1?",
+                options: ["To increase downforce in corners", "To reduce aerodynamic drag and increase top speed", "To improve fuel efficiency", "To cool the brakes during a race"],
+                answer: "To reduce aerodynamic drag and increase top speed"
+            },
+            {
+                question: "Which circuit holds the record for the highest number of F1 races hosted?",
+                options: ["Silverstone", "Monza", "Spa-Francorchamps", "Monte Carlo"],
+                answer: "Monza"
+            }
+        ];
 
         let currentRiddle = 0;
+        let currentCoordRiddle = 0;
         const finalClue = "Meet me on the island's edge, where flowing waters mirror the stars and city lights paint the sky. A moment awaits that could change this story forever. Time: 8:00 PM";
         const coordinates = "49.3064416° N, 14.1443359° E"; // Replace with your coordinates
 
         // Add these constants at the top with other constants
         const STORAGE_KEY = 'riddleProgress';
+        const COORD_RIDDLE_KEY = 'coordRiddleProgress';
         const COORDINATES_SOLVED_KEY = 'coordinatesSolved';
 
         async function sendEmail(stage) {
@@ -793,11 +811,21 @@
                 finalMessage.style.display = 'none';
                 coordSection.style.display = 'block';
                 
-                // Set the riddle question
-                document.getElementById('coordRiddleText').textContent = coordRiddle.question;
-                
-                // Clear any previous input
-                document.getElementById('coordAnswer').value = '';
+                // Set the first coord riddle question
+                if (currentCoordRiddle < coordRiddles.length) {
+                    document.getElementById('coordRiddleText').textContent = coordRiddles[currentCoordRiddle].question;
+                    // First render the answer container
+                    renderCoordAnswerContainer();
+                    
+                    // Then clear the input if it exists and isn't a multiple choice question
+                    const currentQuestion = coordRiddles[currentCoordRiddle];
+                    if (!currentQuestion.options) {
+                        const coordAnswer = document.getElementById('coordAnswer');
+                        if (coordAnswer) {
+                            coordAnswer.value = '';
+                        }
+                    }
+                }
                 
                 // Force reflow
                 void coordSection.offsetHeight;
@@ -805,6 +833,32 @@
                 // Show coordinates section
                 coordSection.classList.add('show');
             }, 500);
+        }
+
+        function renderCoordAnswerContainer() {
+            const coordAnswerContainer = document.getElementById('coordAnswerContainer');
+            const currentQuestion = coordRiddles[currentCoordRiddle];
+            
+            if (currentQuestion.options) {
+                // Replace input with radio buttons and include the submit button
+                coordAnswerContainer.innerHTML = `
+                    <div class="options-container">
+                        ${currentQuestion.options.map((option, index) => `
+                            <div class="radio-option">
+                                <input type="radio" id="coordOption${index}" name="coordAnswer" value="${option}">
+                                <label for="coordOption${index}">${option}</label>
+                            </div>
+                        `).join('')}
+                    </div>
+                    <button onclick="checkCoordinates()">Submit</button>
+                `;
+            } else {
+                // Regular text input for non-multiple choice questions
+                coordAnswerContainer.innerHTML = `
+                    <input type="text" id="coordAnswer" placeholder="Type your answer..." autocomplete="off">
+                    <button onclick="checkCoordinates()">Submit</button>
+                `;
+            }
         }
 
         function updateRiddle() {
@@ -941,8 +995,8 @@
         }
 
         function checkCoordinates() {
-            const answer = document.getElementById('coordAnswer').value.trim();
-            if (answer === coordRiddle.answer) {
+            if (currentCoordRiddle >= coordRiddles.length) {
+                // All coord riddles solved
                 const coordSection = document.getElementById('coordinatesSection');
                 const finalMessage = document.getElementById('finalMessage');
                 
@@ -953,7 +1007,7 @@
                     finalMessage.style.display = 'block';
                     finalMessage.innerHTML = `
                         <p>${finalClue}</p>
-                        <div class="coordinates">49.3064416° N, 14.1443359° E</div>
+                        <div class="coordinates">${coordinates}</div>
                         <button class="reset-button" onclick="resetProgress()">Start Over</button>
                     `;
                     
@@ -962,8 +1016,103 @@
                     sendEmail('Coordinates Revealed');
                     saveCoordinatesSolved();
                 }, 500);
+                return;
+            }
+
+            const currentQuestion = coordRiddles[currentCoordRiddle];
+            let userAnswer;
+
+            if (currentQuestion.options) {
+                // Get selected radio button value
+                const selectedOption = document.querySelector('input[name="coordAnswer"]:checked');
+                if (!selectedOption) {
+                    showFeedbackCoordRiddle('Please select an answer.', false);
+                    return;
+                }
+                userAnswer = selectedOption.value;
             } else {
-                showFeedback('Not quite right. Try again.', false);
+                // For text input questions
+                const answerInput = document.getElementById('coordAnswer');
+                if (!answerInput) {
+                    console.error('Answer input not found');
+                    return;
+                }
+                userAnswer = answerInput.value.trim();
+            }
+            
+            if (userAnswer === currentQuestion.answer) {
+                showFeedbackCoordRiddle('Correct! Moving to next clue...', true);
+                currentCoordRiddle++;
+                saveCoordProgress();
+                
+                setTimeout(() => {
+                    if (currentCoordRiddle < coordRiddles.length) {
+                        // Set next coord riddle
+                        document.getElementById('coordRiddleText').textContent = coordRiddles[currentCoordRiddle].question;
+                        renderCoordAnswerContainer();
+                    } else {
+                        // All coord riddles solved
+                        const coordSection = document.getElementById('coordinatesSection');
+                        const finalMessage = document.getElementById('finalMessage');
+                        
+                        coordSection.classList.remove('show');
+                        
+                        setTimeout(() => {
+                            coordSection.style.display = 'none';
+                            finalMessage.style.display = 'block';
+                            finalMessage.innerHTML = `
+                                <p>${finalClue}</p>
+                                <div class="coordinates">${coordinates}</div>
+                                <button class="reset-button" onclick="resetProgress()">Start Over</button>
+                            `;
+                            
+                            void finalMessage.offsetHeight;
+                            finalMessage.classList.add('show');
+                            sendEmail('Coordinates Revealed');
+                            saveCoordinatesSolved();
+                        }, 500);
+                    }
+                }, 1500);
+            } else {
+                showFeedbackCoordRiddle('Not quite right. Try again.', false);
+            }
+        }
+
+        function showFeedbackCoordRiddle(message, isSuccess) {
+            const feedback = document.getElementById('feedback');
+            const coordSection = document.getElementById('coordinatesSection');
+            const coordRiddleText = document.getElementById('coordRiddleText');
+            const coordAnswerContainer = document.getElementById('coordAnswerContainer');
+            
+            feedback.textContent = isSuccess ? 'Great!' : 'Not quite right. Try again.';
+            feedback.className = 'feedback ' + (isSuccess ? 'success' : 'error') + ' show';
+            
+            if (isSuccess) {
+                // Fade out current coord riddle
+                coordSection.classList.add('fade-out');
+                
+                setTimeout(() => {
+                    feedback.className = 'feedback';
+                    // Proceed to next riddle or finalize
+                    if (currentCoordRiddle < coordRiddles.length) {
+                        // Remove fade-out classes
+                        coordSection.classList.remove('fade-out');
+                        
+                        // Force reflow
+                        void coordSection.offsetWidth;
+                        
+                        // Show next riddle
+                        if (currentCoordRiddle < coordRiddles.length) {
+                            document.getElementById('coordRiddleText').textContent = coordRiddles[currentCoordRiddle].question;
+                            renderCoordAnswerContainer();
+                            coordSection.classList.add('fade-in');
+                        }
+                    }
+                }, 1500);
+            } else {
+                setTimeout(() => {
+                    feedback.className = 'feedback';
+                }, 700);
             }
         }
 
@@ -999,10 +1148,12 @@
         function resetProgress() {
             // Clear local storage
             localStorage.removeItem(STORAGE_KEY);
+            localStorage.removeItem(COORD_RIDDLE_KEY);
             localStorage.removeItem(COORDINATES_SOLVED_KEY);
             
             // Reset current riddle
             currentRiddle = 0;
+            currentCoordRiddle = 0;
             
             // Reset UI
             const welcomeScreen = document.getElementById('welcomeScreen');
@@ -1062,10 +1213,19 @@
         function saveProgress() {
             const progress = {
                 currentRiddle: currentRiddle,
-                coordinatesSolved: false,
+                coordinatesSolved: localStorage.getItem(COORDINATES_SOLVED_KEY) === 'true',
                 finalMessageShown: currentRiddle >= riddles.length
             };
             localStorage.setItem(STORAGE_KEY, JSON.stringify(progress));
+        }
+
+        // Add this function to save coordRiddles progress
+        function saveCoordProgress() {
+            const coordProgress = {
+                currentCoordRiddle: currentCoordRiddle,
+                coordinatesSolved: currentCoordRiddle >= coordRiddles.length
+            };
+            localStorage.setItem(COORD_RIDDLE_KEY, JSON.stringify(coordProgress));
         }
 
         // Add this function to save coordinates solved state
@@ -1076,6 +1236,7 @@
         // Add this function to load saved progress
         function loadProgress() {
             const savedProgress = localStorage.getItem(STORAGE_KEY);
+            const savedCoordProgress = localStorage.getItem(COORD_RIDDLE_KEY);
             const coordsSolved = localStorage.getItem(COORDINATES_SOLVED_KEY);
             
             if (coordsSolved === 'true') {
@@ -1088,7 +1249,7 @@
                 showFinalCoordinates();
                 return; // Exit early
             }
-            
+
             if (savedProgress) {
                 const progress = JSON.parse(savedProgress);
                 currentRiddle = progress.currentRiddle;
@@ -1114,6 +1275,24 @@
                     updateProgress();
                 }
             }
+
+            if (savedCoordProgress) {
+                const coordProgress = JSON.parse(savedCoordProgress);
+                currentCoordRiddle = coordProgress.currentCoordRiddle;
+                if (currentCoordRiddle < coordRiddles.length) {
+                    document.getElementById('welcomeScreen').style.display = 'none';
+                    document.getElementById('mainContent').style.display = 'block';
+                    document.getElementById('mainContent').classList.add('show');
+                    // Set the current coord riddle question
+                    if (currentCoordRiddle < coordRiddles.length) {
+                        document.getElementById('coordRiddleText').textContent = coordRiddles[currentCoordRiddle].question;
+                        renderCoordAnswerContainer();
+                    }
+                } else {
+                    // All coord riddles solved
+                    sendEmail('Coordinates Revealed');
+                }
+            }
         }
 
         // Add this function to show final coordinates directly
@@ -1130,7 +1309,7 @@
             finalMessage.style.display = 'block';
             finalMessage.innerHTML = `
                 <p>${finalClue}</p>
-                <div class="coordinates">49.3064416° N, 14.1443359° E</div>
+                <div class="coordinates">${coordinates}</div>
                 <button class="reset-button" onclick="resetProgress()">Start Over</button>
             `;
             finalMessage.classList.add('show');
@@ -1145,10 +1324,16 @@
             }
             loadProgress();
             setupEventListeners();
-            if (!localStorage.getItem(STORAGE_KEY) && !localStorage.getItem(COORDINATES_SOLVED_KEY)) {
+            if (!localStorage.getItem(STORAGE_KEY) && !localStorage.getItem(COORD_RIDDLE_KEY) && !localStorage.getItem(COORDINATES_SOLVED_KEY)) {
+                updateRiddle();
+            } else if (currentRiddle < riddles.length) {
                 updateRiddle();
             }
         });
     </script>
+    <!-- Add this right before the closing body tag -->
+    <div style="position: fixed; bottom: 10px; left: 50%; transform: translateX(-50%); text-align: center; font-size: 12px; color: #64748b; opacity: 0.6;">
+        I know there might be some bugs, but if it works, don't touch it 
+    </div>
 </body>
 </html>
